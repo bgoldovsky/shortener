@@ -11,11 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bgoldovsky/shortener/internal/app/services/urls"
-	mockUrls "github.com/bgoldovsky/shortener/internal/app/services/urls/mocks"
+	mockHandlers "github.com/bgoldovsky/shortener/internal/handlers/mocks"
 )
-
-const host = "http://localhost:8080"
 
 func TestShortenHandler(t *testing.T) {
 	type want struct {
@@ -24,16 +21,16 @@ func TestShortenHandler(t *testing.T) {
 		shortcut    string
 	}
 	tests := []struct {
-		name    string
-		request string
-		url     string
-		id      string
-		want    want
+		name     string
+		request  string
+		url      string
+		shortcut string
+		want     want
 	}{
 		{
-			name: "success",
-			url:  "https://avito.ru",
-			id:   "xyz",
+			name:     "success",
+			url:      "https://avito.ru",
+			shortcut: "http://localhost:8080/xyz",
 			want: want{
 				contentType: "text/plain; charset=utf-8",
 				statusCode:  201,
@@ -47,15 +44,10 @@ func TestShortenHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			genMock := mockUrls.NewMockgenerator(ctrl)
-			genMock.EXPECT().ID().Return(tt.id)
+			srvMock := mockHandlers.NewMockurlService(ctrl)
+			srvMock.EXPECT().Shorten(tt.url).Return(tt.shortcut)
 
-			repoMock := mockUrls.NewMockrepo(ctrl)
-			repoMock.EXPECT().Add(tt.id, tt.url)
-
-			srv := urls.NewService(repoMock, genMock, host)
-
-			httpHandler := New(srv)
+			httpHandler := New(srvMock)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.url)

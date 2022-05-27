@@ -5,19 +5,19 @@ import (
 	"sync"
 )
 
-type repo struct {
+type inmemoryRepo struct {
 	store map[string]string
 	ma    sync.RWMutex
 }
 
-func NewRepo() *repo {
-	return &repo{
+func NewRepo() *inmemoryRepo {
+	return &inmemoryRepo{
 		store: map[string]string{},
 	}
 }
 
 // Add Сохраняет URL
-func (r *repo) Add(id, url string) {
+func (r *inmemoryRepo) Add(id, url string) {
 	r.ma.Lock()
 	defer r.ma.Unlock()
 
@@ -25,7 +25,7 @@ func (r *repo) Add(id, url string) {
 }
 
 // Get Возвращает URL
-func (r *repo) Get(id string) (string, error) {
+func (r *inmemoryRepo) Get(id string) (string, error) {
 	r.ma.RLock()
 	defer r.ma.RUnlock()
 

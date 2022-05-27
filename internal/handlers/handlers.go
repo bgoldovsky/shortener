@@ -1,3 +1,4 @@
+//go:generate mockgen -source=handlers.go -destination=mocks/mocks.go
 package handlers
 
 import (
@@ -8,16 +9,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type service interface {
+type urlService interface {
 	Shorten(url string) string
 	Expand(id string) (string, error)
 }
 
 type handler struct {
-	service service
+	service urlService
 }
 
-func New(service service) *handler {
+func New(service urlService) *handler {
 	return &handler{
 		service: service,
 	}

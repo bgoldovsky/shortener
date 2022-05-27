@@ -10,43 +10,43 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// Mockrepo is a mock of repo interface.
-type Mockrepo struct {
+// MockurlRepo is a mock of urlRepo interface.
+type MockurlRepo struct {
 	ctrl     *gomock.Controller
-	recorder *MockrepoMockRecorder
+	recorder *MockurlRepoMockRecorder
 }
 
-// MockrepoMockRecorder is the mock recorder for Mockrepo.
-type MockrepoMockRecorder struct {
-	mock *Mockrepo
+// MockurlRepoMockRecorder is the mock recorder for MockurlRepo.
+type MockurlRepoMockRecorder struct {
+	mock *MockurlRepo
 }
 
-// NewMockrepo creates a new mock instance.
-func NewMockrepo(ctrl *gomock.Controller) *Mockrepo {
-	mock := &Mockrepo{ctrl: ctrl}
-	mock.recorder = &MockrepoMockRecorder{mock}
+// NewMockurlRepo creates a new mock instance.
+func NewMockurlRepo(ctrl *gomock.Controller) *MockurlRepo {
+	mock := &MockurlRepo{ctrl: ctrl}
+	mock.recorder = &MockurlRepoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *Mockrepo) EXPECT() *MockrepoMockRecorder {
+func (m *MockurlRepo) EXPECT() *MockurlRepoMockRecorder {
 	return m.recorder
 }
 
 // Add mocks base method.
-func (m *Mockrepo) Add(id, url string) {
+func (m *MockurlRepo) Add(id, url string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Add", id, url)
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockrepoMockRecorder) Add(id, url interface{}) *gomock.Call {
+func (mr *MockurlRepoMockRecorder) Add(id, url interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*Mockrepo)(nil).Add), id, url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockurlRepo)(nil).Add), id, url)
 }
 
 // Get mocks base method.
-func (m *Mockrepo) Get(id string) (string, error) {
+func (m *MockurlRepo) Get(id string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", id)
 	ret0, _ := ret[0].(string)
@@ -55,9 +55,9 @@ func (m *Mockrepo) Get(id string) (string, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockrepoMockRecorder) Get(id interface{}) *gomock.Call {
+func (mr *MockurlRepoMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*Mockrepo)(nil).Get), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockurlRepo)(nil).Get), id)
 }
 
 // Mockgenerator is a mock of generator interface.

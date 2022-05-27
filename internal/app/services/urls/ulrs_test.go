@@ -34,7 +34,7 @@ func TestShorten(t *testing.T) {
 		genMock := mockUrls.NewMockgenerator(ctrl)
 		genMock.EXPECT().ID().Return(tt.id)
 
-		repoMock := mockUrls.NewMockrepo(ctrl)
+		repoMock := mockUrls.NewMockurlRepo(ctrl)
 		repoMock.EXPECT().Add(tt.id, tt.url)
 
 		s := NewService(repoMock, genMock, host)
@@ -69,7 +69,7 @@ func TestExpand(t *testing.T) {
 	defer ctrl.Finish()
 
 	for _, tt := range tests {
-		repoMock := mockUrls.NewMockrepo(ctrl)
+		repoMock := mockUrls.NewMockurlRepo(ctrl)
 		repoMock.EXPECT().Get(tt.shortcut).Return(tt.url, tt.err)
 
 		s := NewService(repoMock, nil, host)

@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type repo interface {
+type urlRepo interface {
 	Add(id, url string)
 	Get(id string) (string, error)
 }
@@ -17,12 +17,12 @@ type generator interface {
 }
 
 type service struct {
-	repo      repo
+	repo      urlRepo
 	generator generator
 	host      string
 }
 
-func NewService(repo repo, generator generator, host string) *service {
+func NewService(repo urlRepo, generator generator, host string) *service {
 	return &service{
 		repo:      repo,
 		generator: generator,
