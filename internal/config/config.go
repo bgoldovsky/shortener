@@ -2,19 +2,19 @@ package config
 
 import "os"
 
-// Port Возвращает порт HTTP сервера
-func Port() string {
-	p := os.Getenv("PORT")
+// ServerAddress Возвращает адрес HTTP сервера
+func ServerAddress() string {
+	p := os.Getenv("SERVER_ADDRESS")
 	if p == "" {
-		p = "8080"
+		p = ":8080"
 	}
 
-	return ":" + p
+	return p
 }
 
-// ShortcutHost Возвращает хост для генерации сокращенного URL
-func ShortcutHost() string {
-	h := os.Getenv("SHORTCUT_HOST")
+// BaseURL Возвращает хост для генерации сокращенного URL
+func BaseURL() string {
+	h := os.Getenv("BASE_URL")
 	if h == "" {
 		h = "http://localhost:8080"
 	}

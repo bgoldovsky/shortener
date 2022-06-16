@@ -20,7 +20,7 @@ func main() {
 
 	// Services
 	gen := generator.NewGenerator()
-	service := urlsSrv.NewService(repo, gen, config.ShortcutHost())
+	service := urlsSrv.NewService(repo, gen, config.BaseURL())
 
 	// Router
 	r := chi.NewRouter()
@@ -30,7 +30,7 @@ func main() {
 	r.Get("/{id}", handlers.New(service).Expand)
 
 	// Start service
-	port := config.Port()
-	logrus.WithField("port", port).Info("server starts")
-	logrus.Fatal(http.ListenAndServe(port, r))
+	address := config.ServerAddress()
+	logrus.WithField("address", address).Info("server starts")
+	logrus.Fatal(http.ListenAndServe(address, r))
 }
