@@ -26,7 +26,8 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middlewares.Logging)
 	r.Use(middlewares.Recovering)
-	r.Post("/", handlers.New(service).Shorten)
+	r.Post("/", handlers.New(service).ShortenV1)
+	r.Post("/api/shorten", handlers.New(service).ShortenV2)
 	r.Get("/{id}", handlers.New(service).Expand)
 
 	// Start service
