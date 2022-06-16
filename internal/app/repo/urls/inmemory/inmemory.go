@@ -1,4 +1,4 @@
-package urls
+package inmemory
 
 import (
 	"errors"
@@ -17,11 +17,12 @@ func NewRepo() *inmemoryRepo {
 }
 
 // Add Сохраняет URL
-func (r *inmemoryRepo) Add(id, url string) {
+func (r *inmemoryRepo) Add(id, url string) error {
 	r.ma.Lock()
 	defer r.ma.Unlock()
 
 	r.store[id] = url
+	return nil
 }
 
 // Get Возвращает URL

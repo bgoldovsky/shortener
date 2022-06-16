@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// Repositories
-	repo := urlsRepo.NewRepo()
+	repo := urlsRepo.Factory(config.FileStoragePath())
 
 	// Services
 	gen := generator.NewGenerator()
@@ -24,9 +24,14 @@ func main() {
 
 	// Router
 	r := chi.NewRouter()
+
 	r.Use(middlewares.Logging)
 	r.Use(middlewares.Recovering)
-	r.Post("/", handlers.New(service).Shorten)
+	r.Use(middlewares.Decompressing)
+	r.Use(middlewares.Compressing)
+
+	r.Post("/", handlers.New(service).ShortenV1)
+	r.Post("/api/shorten", handlers.New(service).ShortenV2)
 	r.Get("/{id}", handlers.New(service).Expand)
 
 	// Start service

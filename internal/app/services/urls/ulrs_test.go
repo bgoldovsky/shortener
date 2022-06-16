@@ -18,12 +18,20 @@ func TestShorten(t *testing.T) {
 		id       string
 		shortcut string
 		url      string
+		err      error
 	}{
 		{
 			name:     "success",
 			id:       "qwerty",
-			shortcut: "http://localhost:8080/qwerty",
 			url:      "avito.ru",
+			shortcut: "http://localhost:8080/qwerty",
+		},
+		{
+			name:     "success",
+			id:       "qwerty",
+			url:      "avito.ru",
+			shortcut: "",
+			err:      errors.New("test err"),
 		},
 	}
 
@@ -35,11 +43,12 @@ func TestShorten(t *testing.T) {
 		genMock.EXPECT().ID().Return(tt.id)
 
 		repoMock := mockUrls.NewMockurlRepo(ctrl)
-		repoMock.EXPECT().Add(tt.id, tt.url)
+		repoMock.EXPECT().Add(tt.id, tt.url).Return(tt.err)
 
 		s := NewService(repoMock, genMock, host)
-		act := s.Shorten(tt.url)
+		act, err := s.Shorten(tt.url)
 
+		assert.Equal(t, tt.err, err)
 		assert.Equal(t, tt.shortcut, act)
 	}
 }
