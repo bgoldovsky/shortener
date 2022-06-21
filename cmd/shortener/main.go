@@ -25,10 +25,14 @@ func main() {
 	// Router
 	r := chi.NewRouter()
 
+	// MV
+	compress, err := middlewares.NewCompressor()
+	panicOnError(err)
+
 	r.Use(middlewares.Logging)
 	r.Use(middlewares.Recovering)
 	r.Use(middlewares.Decompressing)
-	r.Use(middlewares.Compressing)
+	r.Use(compress.Compressing)
 
 	r.Post("/", handlers.New(service).ShortenV1)
 	r.Post("/api/shorten", handlers.New(service).ShortenV2)
@@ -38,4 +42,11 @@ func main() {
 	address := config.ServerAddress()
 	logrus.WithField("address", address).Info("server starts")
 	logrus.Fatal(http.ListenAndServe(address, r))
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		logrus.WithError(err).Error("fatal error")
+		panic(err)
+	}
 }

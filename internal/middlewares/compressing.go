@@ -2,37 +2,41 @@ package middlewares
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 )
 
-var gz *gzip.Writer
+type compressor struct {
+	gz *gzip.Writer
+}
 
-func init() {
-	var err error
-	gz, err = gzip.NewWriterLevel(nil, gzip.BestSpeed)
+func NewCompressor() (*compressor, error) {
+	gz, err := gzip.NewWriterLevel(nil, gzip.BestSpeed)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("init compressor error: %w", err)
 	}
+
+	return &compressor{gz: gz}, nil
 }
 
 // Compressing Сжимает ответ gzip
-func Compressing(next http.Handler) http.Handler {
+func (c *compressor) Compressing(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		gz.Reset(w)
+		c.gz.Reset(w)
 		defer func(gz *gzip.Writer) {
 			_ = gz.Close()
-		}(gz)
+		}(c.gz)
 
 		w.Header().Set("Content-Encoding", "gzip")
 
-		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: c.gz}, r)
 	})
 }
 
