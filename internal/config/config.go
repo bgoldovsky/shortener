@@ -1,53 +1,43 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"os"
 )
 
-func init() {
-	cfg.serverAddress = serverAddress()
-	cfg.baseURL = baseURL()
-	cfg.fileStoragePath = fileStoragePath()
+type appConfig struct {
+	ServerAddress   string
+	BaseURL         string
+	FileStoragePath string
+}
 
+func New() (*appConfig, error) {
+	serverAddress := getServerAddress()
+	baseURL := getBaseURL()
+	fileStoreagePath := getFileStoragePath()
 	flag.Parse()
-}
 
-// cfg Конфигурация сервиса
-var cfg struct {
-	serverAddress   *string
-	baseURL         *string
-	fileStoragePath *string
-}
-
-// ServerAddress Возвращает адрес HTTP сервера
-func ServerAddress() string {
-	if cfg.serverAddress == nil {
-		panic("server address not specified")
+	if serverAddress == nil {
+		return nil, errors.New("server address not specified")
 	}
 
-	return *cfg.serverAddress
-}
-
-// BaseURL Возвращает хост для генерации сокращенного URL
-func BaseURL() string {
-	if cfg.baseURL == nil {
-		panic("base url not specified")
+	if baseURL == nil {
+		return nil, errors.New("base url not specified")
 	}
 
-	return *cfg.baseURL
-}
-
-// FileStoragePath Возвращает путь к файлу хранилища
-func FileStoragePath() string {
-	if cfg.fileStoragePath == nil {
-		panic("file storage path not specified")
+	if fileStoreagePath == nil {
+		return nil, errors.New("file storage path not specified")
 	}
 
-	return *cfg.fileStoragePath
+	return &appConfig{
+		ServerAddress:   *serverAddress,
+		BaseURL:         *baseURL,
+		FileStoragePath: *fileStoreagePath,
+	}, nil
 }
 
-func serverAddress() *string {
+func getServerAddress() *string {
 	address := os.Getenv("SERVER_ADDRESS")
 	if address == "" {
 		address = ":8080"
@@ -56,7 +46,7 @@ func serverAddress() *string {
 	return flag.String("a", address, "server address")
 }
 
-func baseURL() *string {
+func getBaseURL() *string {
 	url := os.Getenv("BASE_URL")
 	if url == "" {
 		url = "http://localhost:8080"
@@ -65,7 +55,7 @@ func baseURL() *string {
 	return flag.String("b", url, "base url")
 }
 
-func fileStoragePath() *string {
+func getFileStoragePath() *string {
 	path := os.Getenv("FILE_STORAGE_PATH")
 
 	return flag.String("f", path, "file storage path")

@@ -15,17 +15,21 @@ import (
 )
 
 func main() {
+	// Config
+	cfg, err := config.New()
+	panicOnError(err)
+
 	// Repositories
-	repo := urlsRepo.Factory(config.FileStoragePath())
+	repo := urlsRepo.Factory(cfg.FileStoragePath)
 
 	// Services
 	gen := generator.NewGenerator()
-	service := urlsSrv.NewService(repo, gen, config.BaseURL())
+	service := urlsSrv.NewService(repo, gen, cfg.BaseURL)
 
 	// Router
 	r := chi.NewRouter()
 
-	// MV
+	// Middlewares
 	compress, err := middlewares.NewCompressor()
 	panicOnError(err)
 
@@ -39,7 +43,7 @@ func main() {
 	r.Get("/{id}", handlers.New(service).Expand)
 
 	// Start service
-	address := config.ServerAddress()
+	address := cfg.ServerAddress
 	logrus.WithField("address", address).Info("server starts")
 	logrus.Fatal(http.ListenAndServe(address, r))
 }
