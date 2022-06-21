@@ -12,7 +12,7 @@ type appConfig struct {
 	FileStoragePath string
 }
 
-func New() (*appConfig, error) {
+func NewConfig() (*appConfig, error) {
 	serverAddress := getServerAddress()
 	baseURL := getBaseURL()
 	fileStoreagePath := getFileStoragePath()

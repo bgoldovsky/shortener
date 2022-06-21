@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// Config
-	cfg, err := config.New()
+	cfg, err := config.NewConfig()
 	panicOnError(err)
 
 	// Repositories
