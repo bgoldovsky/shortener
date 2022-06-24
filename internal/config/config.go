@@ -1,23 +1,62 @@
 package config
 
-import "os"
+import (
+	"errors"
+	"flag"
+	"os"
+)
 
-// ServerAddress Возвращает адрес HTTP сервера
-func ServerAddress() string {
+type appConfig struct {
+	ServerAddress   string
+	BaseURL         string
+	FileStoragePath string
+}
+
+func NewConfig() (*appConfig, error) {
+	serverAddress := getServerAddress()
+	baseURL := getBaseURL()
+	fileStoreagePath := getFileStoragePath()
+	flag.Parse()
+
+	if serverAddress == nil {
+		return nil, errors.New("server address not specified")
+	}
+
+	if baseURL == nil {
+		return nil, errors.New("base url not specified")
+	}
+
+	if fileStoreagePath == nil {
+		return nil, errors.New("file storage path not specified")
+	}
+
+	return &appConfig{
+		ServerAddress:   *serverAddress,
+		BaseURL:         *baseURL,
+		FileStoragePath: *fileStoreagePath,
+	}, nil
+}
+
+func getServerAddress() *string {
 	address := os.Getenv("SERVER_ADDRESS")
 	if address == "" {
 		address = ":8080"
 	}
 
-	return address
+	return flag.String("a", address, "server address")
 }
 
-// BaseURL Возвращает хост для генерации сокращенного URL
-func BaseURL() string {
+func getBaseURL() *string {
 	url := os.Getenv("BASE_URL")
 	if url == "" {
 		url = "http://localhost:8080"
 	}
 
-	return url
+	return flag.String("b", url, "base url")
+}
+
+func getFileStoragePath() *string {
+	path := os.Getenv("FILE_STORAGE_PATH")
+
+	return flag.String("f", path, "file storage path")
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type urlRepo interface {
-	Add(id, url string)
+	Add(id, url string) error
 	Get(id string) (string, error)
 }
 
@@ -31,11 +31,15 @@ func NewService(repo urlRepo, generator generator, host string) *service {
 }
 
 // Shorten Сокращает URL
-func (s *service) Shorten(url string) string {
+func (s *service) Shorten(url string) (string, error) {
 	id := s.generator.ID()
-	s.repo.Add(id, url)
+	err := s.repo.Add(id, url)
+	if err != nil {
+		logrus.WithError(err).WithField("id", id).WithField("url", url).Error("add url error")
+		return "", err
+	}
 
-	return fmt.Sprintf("%s/%s", s.host, id)
+	return fmt.Sprintf("%s/%s", s.host, id), nil
 }
 
 // Expand Возвращает полный URL по идентификатору сокращенного

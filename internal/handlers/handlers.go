@@ -2,15 +2,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
 )
 
 type urlService interface {
-	Shorten(url string) string
+	Shorten(url string) (string, error)
 	Expand(id string) (string, error)
 }
 
@@ -24,8 +26,8 @@ func New(service urlService) *handler {
 	}
 }
 
-// Shorten Сокращает URL
-func (h *handler) Shorten(w http.ResponseWriter, r *http.Request) {
+// ShortenV1 Сокращает URL, принимает и возвращает строку
+func (h *handler) ShortenV1(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -33,13 +35,70 @@ func (h *handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
+		return
 	}
 
-	shortcut := h.service.Shorten(string(b))
+	url := string(b)
+	shortcut, err := h.service.Shorten(url)
+	if err != nil {
+		logrus.WithError(err).WithField("url", url).Error("shorten url error")
+		http.Error(w, err.Error(), 500)
+		return
+	}
 
 	w.Header().Set("content-type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write([]byte(shortcut))
+	if err != nil {
+		logrus.WithError(err).WithField("shortcut", shortcut).Error("write response error")
+		return
+	}
+}
+
+// ShortenV2 Сокращает URL, принимает и возвращает JSON
+func (h *handler) ShortenV2(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	req := ShortenRequest{}
+	if err = json.Unmarshal(b, &req); err != nil {
+		http.Error(w, "request in not valid", http.StatusBadRequest)
+		return
+	}
+
+	ok, err := govalidator.ValidateStruct(req)
+	if err != nil || !ok {
+		http.Error(w, "request in not valid", http.StatusBadRequest)
+		return
+	}
+
+	shortcut, err := h.service.Shorten(req.URL)
+	if err != nil {
+		logrus.WithError(err).WithField("url", req.URL).Error("shorten url error")
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	resp := ShortenReply{ShortenURL: shortcut}
+	marshal, err := json.Marshal(&resp)
+	if err != nil {
+		logrus.WithError(err).WithField("resp", resp).Error("marshal response error")
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	_, err = w.Write(marshal)
 	if err != nil {
 		logrus.WithError(err).WithField("shortcut", shortcut).Error("write response error")
 		return

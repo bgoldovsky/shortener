@@ -15,22 +15,42 @@ import (
 )
 
 func main() {
+	// Config
+	cfg, err := config.NewConfig()
+	panicOnError(err)
+
 	// Repositories
-	repo := urlsRepo.NewRepo()
+	repo := urlsRepo.Factory(cfg.FileStoragePath)
 
 	// Services
 	gen := generator.NewGenerator()
-	service := urlsSrv.NewService(repo, gen, config.BaseURL())
+	service := urlsSrv.NewService(repo, gen, cfg.BaseURL)
 
 	// Router
 	r := chi.NewRouter()
+
+	// Middlewares
+	compress, err := middlewares.NewCompressor()
+	panicOnError(err)
+
 	r.Use(middlewares.Logging)
 	r.Use(middlewares.Recovering)
-	r.Post("/", handlers.New(service).Shorten)
+	r.Use(middlewares.Decompressing)
+	r.Use(compress.Compressing)
+
+	r.Post("/", handlers.New(service).ShortenV1)
+	r.Post("/api/shorten", handlers.New(service).ShortenV2)
 	r.Get("/{id}", handlers.New(service).Expand)
 
 	// Start service
-	address := config.ServerAddress()
+	address := cfg.ServerAddress
 	logrus.WithField("address", address).Info("server starts")
 	logrus.Fatal(http.ListenAndServe(address, r))
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		logrus.WithError(err).Error("fatal error")
+		panic(err)
+	}
 }
