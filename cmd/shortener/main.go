@@ -41,6 +41,7 @@ func main() {
 	r.Post("/", handlers.New(service).ShortenV1)
 	r.Post("/api/shorten", handlers.New(service).ShortenV2)
 	r.Get("/{id}", handlers.New(service).Expand)
+	r.Get("/api/user/urls", handlers.New(service).GetUrls)
 
 	// Start service
 	address := cfg.ServerAddress

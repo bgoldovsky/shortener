@@ -5,11 +5,14 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+
+	"github.com/bgoldovsky/shortener/internal/app/models"
 )
 
 type urlRepo interface {
 	Add(id, url string) error
 	Get(id string) (string, error)
+	GetList() ([]models.URL, error)
 }
 
 type generator interface {
@@ -51,4 +54,15 @@ func (s *service) Expand(id string) (string, error) {
 	}
 
 	return url, nil
+}
+
+// GetUrls Возвращает список всех сокращенных URL
+func (s *service) GetUrls() ([]models.URL, error) {
+	urls, err := s.repo.GetList()
+	if err != nil {
+		logrus.WithError(err).Error("get url list error")
+		return nil, err
+	}
+
+	return urls, nil
 }

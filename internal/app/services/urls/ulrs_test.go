@@ -7,12 +7,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/bgoldovsky/shortener/internal/app/models"
 	mockUrls "github.com/bgoldovsky/shortener/internal/app/services/urls/mocks"
 )
 
 const host = "http://localhost:8080"
 
-func TestShorten(t *testing.T) {
+func TestService_Shorten(t *testing.T) {
 	tests := []struct {
 		name     string
 		id       string
@@ -53,7 +54,7 @@ func TestShorten(t *testing.T) {
 	}
 }
 
-func TestExpand(t *testing.T) {
+func TestService_Expand(t *testing.T) {
 	tests := []struct {
 		name     string
 		shortcut string
@@ -86,5 +87,47 @@ func TestExpand(t *testing.T) {
 
 		assert.Equal(t, tt.err, err)
 		assert.Equal(t, tt.url, act)
+	}
+}
+
+func TestService_GetUrls(t *testing.T) {
+	tests := []struct {
+		name string
+		urls []models.URL
+		err  error
+	}{
+		{
+			name: "success",
+			urls: []models.URL{
+				{
+					ShortURL:    "http://localhost:8080/xyz",
+					OriginalURL: "https://avito.ru",
+				},
+				{
+					ShortURL:    "http://localhost:8080/qwerty",
+					OriginalURL: "https://yandex.ru",
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "repo err",
+			urls: nil,
+			err:  errors.New("test err"),
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	for _, tt := range tests {
+		repoMock := mockUrls.NewMockurlRepo(ctrl)
+		repoMock.EXPECT().GetList().Return(tt.urls, tt.err)
+
+		s := NewService(repoMock, nil, host)
+		act, err := s.GetUrls()
+
+		assert.Equal(t, tt.err, err)
+		assert.Equal(t, tt.urls, act)
 	}
 }

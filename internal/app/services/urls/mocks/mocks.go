@@ -7,6 +7,7 @@ package mock_urls
 import (
 	reflect "reflect"
 
+	models "github.com/bgoldovsky/shortener/internal/app/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -60,6 +61,21 @@ func (m *MockurlRepo) Get(id string) (string, error) {
 func (mr *MockurlRepoMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockurlRepo)(nil).Get), id)
+}
+
+// GetList mocks base method.
+func (m *MockurlRepo) GetList() ([]models.URL, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetList")
+	ret0, _ := ret[0].([]models.URL)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetList indicates an expected call of GetList.
+func (mr *MockurlRepoMockRecorder) GetList() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetList", reflect.TypeOf((*MockurlRepo)(nil).GetList))
 }
 
 // Mockgenerator is a mock of generator interface.

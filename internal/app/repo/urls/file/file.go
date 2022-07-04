@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"sync"
+
+	"github.com/bgoldovsky/shortener/internal/app/models"
 )
 
 type fileRepo struct {
@@ -93,4 +95,20 @@ func (r *fileRepo) Get(id string) (string, error) {
 	}
 
 	return url, nil
+}
+
+// GetList Возвращает список всех сокращенных URL
+func (r *fileRepo) GetList() ([]models.URL, error) {
+	r.ma.RLock()
+	defer r.ma.RUnlock()
+
+	urls := make([]models.URL, 0, len(r.store))
+	for shortURL, originalURL := range r.store {
+		urls = append(urls, models.URL{
+			ShortURL:    shortURL,
+			OriginalURL: originalURL,
+		})
+	}
+
+	return urls, nil
 }

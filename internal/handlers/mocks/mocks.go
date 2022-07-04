@@ -7,6 +7,7 @@ package mock_handlers
 import (
 	reflect "reflect"
 
+	models "github.com/bgoldovsky/shortener/internal/app/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -46,6 +47,21 @@ func (m *MockurlService) Expand(id string) (string, error) {
 func (mr *MockurlServiceMockRecorder) Expand(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expand", reflect.TypeOf((*MockurlService)(nil).Expand), id)
+}
+
+// GetUrls mocks base method.
+func (m *MockurlService) GetUrls() ([]models.URL, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUrls")
+	ret0, _ := ret[0].([]models.URL)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUrls indicates an expected call of GetUrls.
+func (mr *MockurlServiceMockRecorder) GetUrls() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUrls", reflect.TypeOf((*MockurlService)(nil).GetUrls))
 }
 
 // Shorten mocks base method.

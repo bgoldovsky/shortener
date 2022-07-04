@@ -75,3 +75,26 @@ func TestFileRepo_Get_RestoreData(t *testing.T) {
 
 	assert.Equal(t, "yandex.ru", act)
 }
+
+func TestFileRepo_GetList(t *testing.T) {
+	repo, err := NewRepo(filePath)
+	require.NoError(t, err)
+
+	defer func() {
+		_ = os.Remove(filePath)
+	}()
+
+	err = repo.Add("qwerty", "avito.ru")
+	require.NoError(t, err)
+
+	err = repo.Add("ytrewq", "yandex.ru")
+	require.NoError(t, err)
+
+	repo, err = NewRepo("store.dat")
+	require.NoError(t, err)
+
+	act, err := repo.GetList()
+	require.NoError(t, err)
+
+	assert.Len(t, act, 2)
+}

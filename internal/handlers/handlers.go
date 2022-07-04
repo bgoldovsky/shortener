@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bgoldovsky/shortener/internal/app/models"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
@@ -14,6 +16,7 @@ import (
 type urlService interface {
 	Shorten(url string) (string, error)
 	Expand(id string) (string, error)
+	GetUrls() ([]models.URL, error)
 }
 
 type handler struct {
@@ -125,4 +128,39 @@ func (h *handler) Expand(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+// GetUrls Возвращает список всех сокращенных URL пользователя
+func (h *handler) GetUrls(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+
+	urls, err := h.service.GetUrls()
+	if err != nil {
+		logrus.WithError(err).Error("get urls error")
+		http.Error(w, "get urls error", http.StatusInternalServerError)
+		return
+	}
+	if len(urls) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	resp := toGetUrlsReply(urls)
+	marshal, err := json.Marshal(&resp)
+	if err != nil {
+		logrus.WithError(err).WithField("resp", resp).Error("marshal response error")
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	_, err = w.Write(marshal)
+	if err != nil {
+		logrus.WithError(err).WithField("resp", resp).Error("write response error")
+		return
+	}
 }

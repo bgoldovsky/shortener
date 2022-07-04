@@ -3,6 +3,8 @@ package inmemory
 import (
 	"errors"
 	"sync"
+
+	"github.com/bgoldovsky/shortener/internal/app/models"
 )
 
 type inmemoryRepo struct {
@@ -36,4 +38,20 @@ func (r *inmemoryRepo) Get(id string) (string, error) {
 	}
 
 	return url, nil
+}
+
+// GetList Возвращает список всех сокращенных URL
+func (r *inmemoryRepo) GetList() ([]models.URL, error) {
+	r.ma.RLock()
+	defer r.ma.RUnlock()
+
+	urls := make([]models.URL, 0, len(r.store))
+	for shortURL, originalURL := range r.store {
+		urls = append(urls, models.URL{
+			ShortURL:    shortURL,
+			OriginalURL: originalURL,
+		})
+	}
+
+	return urls, nil
 }
