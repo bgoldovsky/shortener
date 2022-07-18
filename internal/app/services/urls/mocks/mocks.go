@@ -5,8 +5,10 @@
 package mock_urls
 
 import (
+	context "context"
 	reflect "reflect"
 
+	models "github.com/bgoldovsky/shortener/internal/app/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -34,32 +36,61 @@ func (m *MockurlRepo) EXPECT() *MockurlRepoMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockurlRepo) Add(id, url string) error {
+func (m *MockurlRepo) Add(ctx context.Context, urlID, url, userID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", id, url)
+	ret := m.ctrl.Call(m, "Add", ctx, urlID, url, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockurlRepoMockRecorder) Add(id, url interface{}) *gomock.Call {
+func (mr *MockurlRepoMockRecorder) Add(ctx, urlID, url, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockurlRepo)(nil).Add), id, url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockurlRepo)(nil).Add), ctx, urlID, url, userID)
+}
+
+// AddBatch mocks base method.
+func (m *MockurlRepo) AddBatch(ctx context.Context, urls []models.URL, userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddBatch", ctx, urls, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddBatch indicates an expected call of AddBatch.
+func (mr *MockurlRepoMockRecorder) AddBatch(ctx, urls, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBatch", reflect.TypeOf((*MockurlRepo)(nil).AddBatch), ctx, urls, userID)
 }
 
 // Get mocks base method.
-func (m *MockurlRepo) Get(id string) (string, error) {
+func (m *MockurlRepo) Get(ctx context.Context, urlID string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", id)
+	ret := m.ctrl.Call(m, "Get", ctx, urlID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockurlRepoMockRecorder) Get(id interface{}) *gomock.Call {
+func (mr *MockurlRepoMockRecorder) Get(ctx, urlID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockurlRepo)(nil).Get), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockurlRepo)(nil).Get), ctx, urlID)
+}
+
+// GetList mocks base method.
+func (m *MockurlRepo) GetList(ctx context.Context, userID string) ([]models.URL, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetList", ctx, userID)
+	ret0, _ := ret[0].([]models.URL)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetList indicates an expected call of GetList.
+func (mr *MockurlRepoMockRecorder) GetList(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetList", reflect.TypeOf((*MockurlRepo)(nil).GetList), ctx, userID)
 }
 
 // Mockgenerator is a mock of generator interface.
@@ -85,16 +116,17 @@ func (m *Mockgenerator) EXPECT() *MockgeneratorMockRecorder {
 	return m.recorder
 }
 
-// ID mocks base method.
-func (m *Mockgenerator) ID() string {
+// RandomString mocks base method.
+func (m *Mockgenerator) RandomString(n int64) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ID")
+	ret := m.ctrl.Call(m, "RandomString", n)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// ID indicates an expected call of ID.
-func (mr *MockgeneratorMockRecorder) ID() *gomock.Call {
+// RandomString indicates an expected call of RandomString.
+func (mr *MockgeneratorMockRecorder) RandomString(n interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ID", reflect.TypeOf((*Mockgenerator)(nil).ID))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RandomString", reflect.TypeOf((*Mockgenerator)(nil).RandomString), n)
 }

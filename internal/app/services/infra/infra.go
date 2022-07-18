@@ -1,0 +1,33 @@
+//go:generate mockgen -source=infra.go -destination=mocks/mocks.go
+package infra
+
+import (
+	"context"
+
+	"github.com/sirupsen/logrus"
+)
+
+type urlRepo interface {
+	Ping(ctx context.Context) error
+}
+
+type service struct {
+	urlRepo urlRepo
+}
+
+func NewService(urlRepo urlRepo) *service {
+	return &service{
+		urlRepo: urlRepo,
+	}
+}
+
+// Ping Проверяет доступность базы данных
+func (s *service) Ping(ctx context.Context) bool {
+	err := s.urlRepo.Ping(ctx)
+	if err != nil {
+		logrus.WithError(err).Error("ping database error")
+		return false
+	}
+
+	return true
+}

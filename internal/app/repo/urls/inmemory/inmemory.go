@@ -1,39 +1,121 @@
 package inmemory
 
 import (
-	"errors"
+	"context"
 	"sync"
+
+	"github.com/bgoldovsky/shortener/internal/app/models"
+	internalErrors "github.com/bgoldovsky/shortener/internal/app/repo/urls/errors"
 )
 
 type inmemoryRepo struct {
-	store map[string]string
+	store map[string]map[string]string
 	ma    sync.RWMutex
 }
 
 func NewRepo() *inmemoryRepo {
 	return &inmemoryRepo{
-		store: map[string]string{},
+		store: map[string]map[string]string{},
 	}
 }
 
 // Add Сохраняет URL
-func (r *inmemoryRepo) Add(id, url string) error {
+func (r *inmemoryRepo) Add(_ context.Context, urlID, url, userID string) error {
 	r.ma.Lock()
 	defer r.ma.Unlock()
 
-	r.store[id] = url
+	// Проверяем не содержится ли в репозитории такой URL
+	if lastURLID, exist := r.urlExist(url); exist {
+		return internalErrors.NewNotUniqueURLErr(lastURLID, url, nil)
+	}
+
+	// Извлекаем коллекцию URL пользователя из хранилища, если нет, то создаем новую
+	userStore, ok := r.store[userID]
+	if !ok {
+		userStore = map[string]string{}
+	}
+
+	// Сохраняем коллекцию URL пользователя в хранилище
+	userStore[urlID] = url
+	r.store[userID] = userStore
+
+	return nil
+}
+
+func (r *inmemoryRepo) urlExist(url string) (string, bool) {
+	for _, userStore := range r.store {
+		for urlID, originalURL := range userStore {
+			if url == originalURL {
+				return urlID, true
+			}
+		}
+	}
+
+	return "", false
+}
+
+func (r *inmemoryRepo) AddBatch(_ context.Context, urls []models.URL, userID string) error {
+	r.ma.Lock()
+	defer r.ma.Unlock()
+
+	// Извлекаем коллекцию URL пользователя из хранилища, если нет, то создаем новую
+	userStore, ok := r.store[userID]
+	if !ok {
+		userStore = map[string]string{}
+	}
+
+	// Добавляем URL в коллекцию пользователя, избегая копирования
+	for idx := range urls {
+		userStore[urls[idx].ShortURL] = urls[idx].OriginalURL
+	}
+
+	// Сохраняем коллекцию URL пользователя в хранилище
+	r.store[userID] = userStore
+
 	return nil
 }
 
 // Get Возвращает URL
-func (r *inmemoryRepo) Get(id string) (string, error) {
+func (r *inmemoryRepo) Get(_ context.Context, urlID string) (string, error) {
 	r.ma.RLock()
 	defer r.ma.RUnlock()
 
-	url, ok := r.store[id]
-	if !ok {
-		return "", errors.New("url not found")
+	for _, userStore := range r.store {
+		if url, ok := userStore[urlID]; ok {
+			return url, nil
+		}
 	}
 
-	return url, nil
+	return "", internalErrors.ErrURLNotFound
+}
+
+// GetList Возвращает список всех сокращенных URL
+func (r *inmemoryRepo) GetList(_ context.Context, userID string) ([]models.URL, error) {
+	r.ma.RLock()
+	defer r.ma.RUnlock()
+
+	urls := make([]models.URL, 0)
+
+	userStore, ok := r.store[userID]
+	if !ok {
+		return urls, nil
+	}
+
+	for shortURL, originalURL := range userStore {
+		urls = append(urls, models.URL{
+			ShortURL:    shortURL,
+			OriginalURL: originalURL,
+		})
+	}
+
+	return urls, nil
+}
+
+// Ping Проверяет доступность базы данных
+func (r *inmemoryRepo) Ping(_ context.Context) error {
+	return nil
+}
+
+func (r *inmemoryRepo) Close() error {
+	return nil
 }
