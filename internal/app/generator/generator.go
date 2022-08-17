@@ -9,13 +9,10 @@ import (
 
 const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func init() {
-	math.Seed(time.Now().Unix())
-}
-
 type generator struct{}
 
 func NewGenerator() *generator {
+	math.Seed(time.Now().Unix())
 	return &generator{}
 }
 
