@@ -10,12 +10,16 @@ type appConfig struct {
 	ServerAddress   string
 	BaseURL         string
 	FileStoragePath string
+	DatabaseDSN     string
+	Secret          []byte
 }
 
 func NewConfig() (*appConfig, error) {
 	serverAddress := getServerAddress()
 	baseURL := getBaseURL()
-	fileStoreagePath := getFileStoragePath()
+	fileStoragePath := getFileStoragePath()
+	databaseDSN := getDatabaseDSN()
+	secret := getSecret()
 	flag.Parse()
 
 	if serverAddress == nil {
@@ -26,14 +30,24 @@ func NewConfig() (*appConfig, error) {
 		return nil, errors.New("base url not specified")
 	}
 
-	if fileStoreagePath == nil {
+	if fileStoragePath == nil {
 		return nil, errors.New("file storage path not specified")
+	}
+
+	if databaseDSN == nil {
+		return nil, errors.New("database dsn not specified")
+	}
+
+	if secret == nil {
+		return nil, errors.New("secret key not specified")
 	}
 
 	return &appConfig{
 		ServerAddress:   *serverAddress,
 		BaseURL:         *baseURL,
-		FileStoragePath: *fileStoreagePath,
+		FileStoragePath: *fileStoragePath,
+		DatabaseDSN:     *databaseDSN,
+		Secret:          []byte(*secret),
 	}, nil
 }
 
@@ -59,4 +73,25 @@ func getFileStoragePath() *string {
 	path := os.Getenv("FILE_STORAGE_PATH")
 
 	return flag.String("f", path, "file storage path")
+}
+
+func getDatabaseDSN() *string {
+	/*
+		dp := "host=localhost port=5432 user=postgres password=1073849 dbname=shortner sslmode=disable"
+		return &dp
+
+	*/
+
+	dsn := os.Getenv("DATABASE_DSN")
+
+	return flag.String("d", dsn, "data source name")
+}
+
+func getSecret() *string {
+	url := os.Getenv("SECRET")
+	if url == "" {
+		url = "my-secret-key"
+	}
+
+	return flag.String("s", url, "secret")
 }
