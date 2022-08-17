@@ -8,8 +8,10 @@ import (
 
 	"github.com/bgoldovsky/shortener/internal/app/generator"
 	"github.com/bgoldovsky/shortener/internal/app/hasher"
+	"github.com/bgoldovsky/shortener/internal/app/models"
 	urlsRepository "github.com/bgoldovsky/shortener/internal/app/repositories/urls"
 	authService "github.com/bgoldovsky/shortener/internal/app/services/auth"
+	cleanerService "github.com/bgoldovsky/shortener/internal/app/services/cleaner"
 	infraService "github.com/bgoldovsky/shortener/internal/app/services/infra"
 	urlsService "github.com/bgoldovsky/shortener/internal/app/services/urls"
 	"github.com/bgoldovsky/shortener/internal/config"
@@ -17,15 +19,21 @@ import (
 	"github.com/bgoldovsky/shortener/internal/middlewares"
 )
 
+const queueSize = 100
+
 func main() {
 	// Config
 	cfg, err := config.NewConfig()
 	panicOnError(err)
 
+	// Channels
+	deleteCh := make(chan models.UserCollection, queueSize)
+	doneCh := make(chan struct{})
+	defer func() { doneCh <- struct{}{} }()
+
 	// Repositories
 	urlsRepo, err := urlsRepository.Factory(cfg.FileStoragePath, cfg.DatabaseDSN)
 	panicOnError(err)
-
 	defer func(urlsRepo urlsRepository.Repository) {
 		_ = urlsRepo.Close()
 	}(urlsRepo)
@@ -36,6 +44,8 @@ func main() {
 	urlsSrv := urlsService.NewService(urlsRepo, gen, cfg.BaseURL)
 	authSrv := authService.NewService(gen, hash)
 	infraSrv := infraService.NewService(urlsRepo)
+	cleanerSrv := cleanerService.NewService(urlsRepo, deleteCh, doneCh)
+	cleanerSrv.Run()
 
 	// Router
 	r := chi.NewRouter()
@@ -51,12 +61,13 @@ func main() {
 	r.Use(compress.Compressing)
 	r.Use(auth.Auth)
 
-	r.Post("/", handlers.New(urlsSrv, auth, infraSrv).ShortenV1)
-	r.Post("/api/shorten", handlers.New(urlsSrv, auth, infraSrv).ShortenV2)
-	r.Post("/api/shorten/batch", handlers.New(urlsSrv, auth, infraSrv).ShortenBatch)
-	r.Get("/{id}", handlers.New(urlsSrv, auth, infraSrv).Expand)
-	r.Get("/api/user/urls", handlers.New(urlsSrv, auth, infraSrv).GetUrls)
-	r.Get("/ping", handlers.New(urlsSrv, auth, infraSrv).Ping)
+	r.Post("/", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).ShortenV1)
+	r.Post("/api/shorten", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).ShortenV2)
+	r.Post("/api/shorten/batch", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).ShortenBatch)
+	r.Get("/{id}", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).Expand)
+	r.Get("/api/user/urls", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).GetUrls)
+	r.Delete("/api/user/urls", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).DeleteUrls)
+	r.Get("/ping", handlers.New(urlsSrv, auth, infraSrv, cleanerSrv).Ping)
 
 	// Start service
 	address := cfg.ServerAddress

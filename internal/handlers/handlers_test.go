@@ -60,7 +60,7 @@ func TestHandler_ShortenV1_Success(t *testing.T) {
 			authMock := mockHandlers.NewMockauth(ctrl)
 			authMock.EXPECT().UserID(gomock.Any()).Return(defaultUserID)
 
-			httpHandler := New(urlsSrvMock, authMock, nil)
+			httpHandler := New(urlsSrvMock, authMock, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.url)
@@ -128,7 +128,7 @@ func TestHandler_ShortenV2_Success(t *testing.T) {
 			authMock := mockHandlers.NewMockauth(ctrl)
 			authMock.EXPECT().UserID(gomock.Any()).Return(defaultUserID)
 
-			httpHandler := New(urlSrvMock, authMock, nil)
+			httpHandler := New(urlSrvMock, authMock, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.body)
@@ -199,7 +199,7 @@ func TestHandler_ShortenV2_BadRequest(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			httpHandler := New(nil, nil, nil)
+			httpHandler := New(nil, nil, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.body)
@@ -268,7 +268,7 @@ func TestHandler_ShortenV2_Conflict(t *testing.T) {
 			authMock := mockHandlers.NewMockauth(ctrl)
 			authMock.EXPECT().UserID(gomock.Any()).Return(defaultUserID)
 
-			httpHandler := New(urlSrvMock, authMock, nil)
+			httpHandler := New(urlSrvMock, authMock, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.body)
@@ -333,7 +333,7 @@ func TestHandler_Expand_Success(t *testing.T) {
 			urlsSrvMock := mockHandlers.NewMockurlsService(ctrl)
 			urlsSrvMock.EXPECT().Expand(gomock.Any(), tt.urlID).Return(tt.url, tt.err)
 
-			httpHandler := New(urlsSrvMock, nil, nil)
+			httpHandler := New(urlsSrvMock, nil, nil, nil)
 
 			request := httptest.NewRequest(http.MethodGet, tt.request, nil)
 			rctx := chi.NewRouteContext()
@@ -410,7 +410,7 @@ func TestHandler_GetUrls_Success(t *testing.T) {
 			authMock := mockHandlers.NewMockauth(ctrl)
 			authMock.EXPECT().UserID(gomock.Any()).Return(defaultUserID)
 
-			httpHandler := New(urlsSrvMock, authMock, nil)
+			httpHandler := New(urlsSrvMock, authMock, nil, nil)
 
 			request := httptest.NewRequest(http.MethodGet, tt.request, nil)
 
@@ -472,7 +472,7 @@ func TestHandler_Ping(t *testing.T) {
 			infraMock := mockHandlers.NewMockinfra(ctrl)
 			infraMock.EXPECT().Ping(ctx).Return(tt.success)
 
-			httpHandler := New(nil, nil, infraMock)
+			httpHandler := New(nil, nil, infraMock, nil)
 
 			request := httptest.NewRequest(http.MethodGet, tt.request, nil)
 
@@ -540,7 +540,7 @@ func TestHandler_ShortenBatch_Success(t *testing.T) {
 			urlsSrvMock := mockHandlers.NewMockurlsService(ctrl)
 			urlsSrvMock.EXPECT().ShortenBatch(ctx, tt.originalURLs, defaultUserID).Return(tt.urls, tt.err)
 
-			httpHandler := New(urlsSrvMock, authMock, nil)
+			httpHandler := New(urlsSrvMock, authMock, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.body)
@@ -610,7 +610,7 @@ func TestHandler_ShortenBatch_BadRequest(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			httpHandler := New(nil, nil, nil)
+			httpHandler := New(nil, nil, nil, nil)
 
 			buffer := new(bytes.Buffer)
 			buffer.WriteString(tt.body)

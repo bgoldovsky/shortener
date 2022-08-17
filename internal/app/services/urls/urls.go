@@ -16,6 +16,7 @@ const idLength int64 = 5
 
 var (
 	ErrURLNotFound  = errors.New("url not found error")
+	ErrURLDeleted   = errors.New("url has been deleted error")
 	ErrNotUniqueURL = errors.New("url not unique error")
 )
 
@@ -115,6 +116,10 @@ func (s *service) Expand(ctx context.Context, urlID string) (string, error) {
 	if err != nil {
 		if errors.Is(err, internalErrors.ErrURLNotFound) {
 			return "", ErrURLNotFound
+		}
+
+		if errors.Is(err, internalErrors.ErrURLDeleted) {
+			return "", ErrURLDeleted
 		}
 
 		logrus.WithError(err).WithField("urlID", urlID).Error("get url error")

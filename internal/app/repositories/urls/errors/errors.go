@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrURLNotFound = errors.New("url not found")
+	ErrURLDeleted  = errors.New("url has been deleted error")
 )
 
 type NotUniqueURLErr struct {

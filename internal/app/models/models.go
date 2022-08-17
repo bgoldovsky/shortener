@@ -10,3 +10,8 @@ type URL struct {
 	ShortURL      string // Сокращенный URL
 	OriginalURL   string // Исходный URL
 }
+
+type UserCollection struct {
+	UserID string   // Идентификатор пользователя
+	URLIDs []string // Идентификаторы URL пользователя
+}

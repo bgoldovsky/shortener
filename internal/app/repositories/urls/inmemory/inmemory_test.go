@@ -82,6 +82,31 @@ func TestInmemoryRepo_GetList_Success(t *testing.T) {
 	assert.Len(t, act, 2)
 }
 
+func TestInmemoryRepository_Delete(t *testing.T) {
+	ctx := context.Background()
+
+	repo := NewRepository()
+
+	urlIDs := []string{"qwerty", "ytrewq"}
+
+	err := repo.Add(ctx, urlIDs[0], "avito.ru", defaultUserID)
+	require.NoError(t, err)
+
+	err = repo.Add(ctx, urlIDs[1], "yandex.ru", defaultUserID)
+	require.NoError(t, err)
+
+	act, err := repo.GetList(ctx, defaultUserID)
+	require.NoError(t, err)
+	require.Len(t, act, 2)
+
+	err = repo.Delete(ctx, urlIDs, defaultUserID)
+	require.NoError(t, err)
+
+	act, err = repo.GetList(ctx, defaultUserID)
+	assert.NoError(t, err)
+	assert.Empty(t, act)
+}
+
 func TestInmemoryRepo_GetList_NotFound(t *testing.T) {
 	ctx := context.Background()
 

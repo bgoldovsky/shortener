@@ -31,17 +31,23 @@ type infra interface {
 	Ping(ctx context.Context) bool
 }
 
+type cleaner interface {
+	Queue(urls models.UserCollection)
+}
+
 type handler struct {
 	urlsService urlsService
 	auth        auth
 	infra       infra
+	cleaner     cleaner
 }
 
-func New(urlsService urlsService, auth auth, infra infra) *handler {
+func New(urlsService urlsService, auth auth, infra infra, cleaner cleaner) *handler {
 	return &handler{
 		urlsService: urlsService,
 		auth:        auth,
 		infra:       infra,
+		cleaner:     cleaner,
 	}
 }
 
@@ -214,6 +220,11 @@ func (h *handler) Expand(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if errors.Is(err, urlsSrv.ErrURLDeleted) {
+			http.Error(w, "url has been deleted", http.StatusGone)
+			return
+		}
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -258,6 +269,38 @@ func (h *handler) GetUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+// DeleteUrls Удаляет список сокращенных URL пользователя
+func (h *handler) DeleteUrls(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := h.auth.UserID(r.Context())
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var urlIDs []string
+	if err := json.Unmarshal(b, &urlIDs); err != nil {
+		http.Error(w, "request in not valid", http.StatusBadRequest)
+		return
+	}
+
+	userURLs := models.UserCollection{
+		UserID: userID,
+		URLIDs: urlIDs,
+	}
+
+	h.cleaner.Queue(userURLs)
+
+	w.Header().Set("content-type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // Ping Проверяет доступность базы данных
