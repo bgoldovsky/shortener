@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/bgoldovsky/shortener/internal/app/models"
 	internalErrors "github.com/bgoldovsky/shortener/internal/app/repositories/urls/errors"
 )
 
@@ -163,7 +164,7 @@ func TestFileRepository_Delete(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, act, 2)
 
-	err = repo.Delete(ctx, urlIDs, defaultUserID)
+	err = repo.Delete(ctx, []models.UserCollection{{UserID: defaultUserID, URLIDs: urlIDs}})
 	require.NoError(t, err)
 
 	act, err = repo.GetList(ctx, defaultUserID)

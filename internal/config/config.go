@@ -76,12 +76,6 @@ func getFileStoragePath() *string {
 }
 
 func getDatabaseDSN() *string {
-	/*
-		dp := "host=localhost port=5432 user=postgres password=1073849 dbname=shortner sslmode=disable"
-		return &dp
-
-	*/
-
 	dsn := os.Getenv("DATABASE_DSN")
 
 	return flag.String("d", dsn, "data source name")

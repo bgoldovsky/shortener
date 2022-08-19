@@ -11,7 +11,7 @@ import (
 )
 
 type urlsRepository interface {
-	Delete(ctx context.Context, urlID []string, userID string) error
+	Delete(ctx context.Context, urlsBatch []models.UserCollection) error
 }
 
 type service struct {
@@ -38,7 +38,7 @@ func (s *service) Run() {
 		for {
 			select {
 			case collection := <-s.deleteCh:
-				err := s.urlsRepo.Delete(context.Background(), collection.URLIDs, collection.UserID)
+				err := s.urlsRepo.Delete(context.Background(), []models.UserCollection{collection})
 				if err != nil {
 					logrus.WithError(err).
 						WithField("userID", collection.UserID).

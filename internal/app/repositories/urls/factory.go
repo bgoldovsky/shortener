@@ -15,7 +15,7 @@ type Repository interface {
 	AddBatch(ctx context.Context, urls []models.URL, userID string) error
 	Get(ctx context.Context, urlID string) (string, error)
 	GetList(ctx context.Context, userID string) ([]models.URL, error)
-	Delete(ctx context.Context, urlID []string, userID string) error
+	Delete(ctx context.Context, urlsBatch []models.UserCollection) error
 	Ping(ctx context.Context) error
 	Close() error
 }

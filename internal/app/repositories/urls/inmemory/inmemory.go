@@ -112,23 +112,25 @@ func (r *inmemoryRepository) GetList(_ context.Context, userID string) ([]models
 }
 
 // Delete Удаляет список URL указанного пользователя
-func (r *inmemoryRepository) Delete(_ context.Context, urlIDs []string, userID string) error {
+func (r *inmemoryRepository) Delete(_ context.Context, urlsBatch []models.UserCollection) error {
 	r.ma.RLock()
 	defer r.ma.RUnlock()
 
-	// Извлекаем коллекцию URL пользователя из хранилища
-	userStore, ok := r.store[userID]
-	if !ok {
-		return nil
-	}
+	for _, collection := range urlsBatch {
+		// Извлекаем коллекцию URL пользователя из хранилища
+		userStore, ok := r.store[collection.UserID]
+		if !ok {
+			return nil
+		}
 
-	// Удаляем указанные URL из репозитория
-	for _, urlID := range urlIDs {
-		delete(userStore, urlID)
-	}
+		// Удаляем указанные URL из репозитория
+		for _, urlID := range collection.URLIDs {
+			delete(userStore, urlID)
+		}
 
-	// Сохраняем коллекцию URL пользователя в хранилище
-	r.store[userID] = userStore
+		// Сохраняем коллекцию URL пользователя в хранилище
+		r.store[collection.UserID] = userStore
+	}
 
 	return nil
 }

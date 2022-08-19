@@ -227,34 +227,36 @@ func buildGetListQuery(userID string) (sql string, args []interface{}, err error
 }
 
 // Delete Удаляет список URL указанного пользователя
-func (r *postgresRepository) Delete(ctx context.Context, urlIDs []string, userID string) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	query, args, err := buildDeleteQuery(urlIDs, userID, time.Now())
-	if err != nil {
-		return fmt.Errorf("build delete urls query error: %w", err)
-	}
-
-	_, err = r.db.ExecContext(ctx, query, args...)
+func (r *postgresRepository) Delete(ctx context.Context, urlsBatch []models.UserCollection) error {
+	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
-func buildDeleteQuery(urlIDs []string, userID string, now time.Time) (sql string, args []interface{}, err error) {
-	q := statement.
-		Update("urls").
-		Set("deleted_at", now).
-		Where(
-			sq.Eq{"id": urlIDs},
-			sq.Eq{"user_id": userID},
-			sq.Eq{"deleted_at": nil},
-		)
+	stmt, err := tx.PrepareContext(ctx, `update urls set deleted_at=$1 where id=$2 and user_id=$3 and deleted_at is null;`)
+	if err != nil {
+		return err
+	}
 
-	return q.ToSql()
+	defer func(stmt *sql.Stmt) {
+		_ = stmt.Close()
+	}(stmt)
+
+	now := time.Now()
+
+	for _, collection := range urlsBatch {
+		for _, urlID := range collection.URLIDs {
+			if _, err = stmt.ExecContext(ctx, now, urlID, collection.UserID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
 }
 
 // Ping Проверяет доступность базы данных
