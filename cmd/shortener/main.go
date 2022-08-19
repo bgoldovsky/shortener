@@ -19,13 +19,15 @@ import (
 	"github.com/bgoldovsky/shortener/internal/middlewares"
 )
 
+const deleteQueueSize = 100
+
 func main() {
 	// Config
 	cfg, err := config.NewConfig()
 	panicOnError(err)
 
 	// Channels
-	deleteCh := make(chan models.UserCollection)
+	deleteCh := make(chan models.UserCollection, deleteQueueSize)
 	doneCh := make(chan struct{})
 	defer func() { doneCh <- struct{}{} }()
 
