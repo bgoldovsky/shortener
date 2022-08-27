@@ -1,6 +1,6 @@
 run:
 	echo "running.."
-	go run ./cmd/shortener
+	go run ./cmd/shortener -d "host=localhost port=5432 user=postgres password=1073849 dbname=shortner sslmode=disable"
 
 build:
 	echo "building.."

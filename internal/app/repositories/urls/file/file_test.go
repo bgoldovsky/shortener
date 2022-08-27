@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/bgoldovsky/shortener/internal/app/models"
 	internalErrors "github.com/bgoldovsky/shortener/internal/app/repositories/urls/errors"
 )
 
@@ -136,6 +137,39 @@ func TestFileRepo_GetList_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Len(t, act, 2)
+}
+
+func TestFileRepository_Delete(t *testing.T) {
+	ctx := context.Background()
+
+	repo, err := NewRepository(filePath)
+	require.NoError(t, err)
+
+	defer func() {
+		_ = os.Remove(filePath)
+	}()
+
+	urlIDs := []string{"qwerty", "ytrewq"}
+
+	err = repo.Add(ctx, urlIDs[0], "avito.ru", defaultUserID)
+	require.NoError(t, err)
+
+	err = repo.Add(ctx, urlIDs[1], "yandex.ru", defaultUserID)
+	require.NoError(t, err)
+
+	repo, err = NewRepository(filePath)
+	require.NoError(t, err)
+
+	act, err := repo.GetList(ctx, defaultUserID)
+	require.NoError(t, err)
+	require.Len(t, act, 2)
+
+	err = repo.Delete(ctx, []models.UserCollection{{UserID: defaultUserID, URLIDs: urlIDs}})
+	require.NoError(t, err)
+
+	act, err = repo.GetList(ctx, defaultUserID)
+	assert.NoError(t, err)
+	assert.Empty(t, act)
 }
 
 func TestFileRepo_GetList_NotFound(t *testing.T) {

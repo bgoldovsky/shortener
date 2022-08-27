@@ -172,11 +172,36 @@ func (r *fileRepository) GetList(_ context.Context, userID string) ([]models.URL
 	return urls, nil
 }
 
+// Delete Удаляет список URL указанного пользователя
+func (r *fileRepository) Delete(ctx context.Context, urlsBatch []models.UserCollection) error {
+	r.ma.RLock()
+	defer r.ma.RUnlock()
+
+	for _, collection := range urlsBatch {
+		// Извлекаем коллекцию URL пользователя из хранилища
+		userStore, ok := r.store[collection.UserID]
+		if !ok {
+			return nil
+		}
+
+		// Удаляем указанные URL из репозитория
+		for _, urlID := range collection.URLIDs {
+			delete(userStore, urlID)
+		}
+
+		// Сохраняем коллекцию URL пользователя в хранилище
+		r.store[collection.UserID] = userStore
+	}
+
+	return r.save()
+}
+
 // Ping Проверяет доступность базы данных
 func (r *fileRepository) Ping(_ context.Context) error {
 	return nil
 }
 
+// Close Закрывает соединение
 func (r *fileRepository) Close() error {
 	return nil
 }

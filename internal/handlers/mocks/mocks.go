@@ -168,3 +168,38 @@ func (mr *MockinfraMockRecorder) Ping(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*Mockinfra)(nil).Ping), ctx)
 }
+
+// Mockcleaner is a mock of cleaner interface.
+type Mockcleaner struct {
+	ctrl     *gomock.Controller
+	recorder *MockcleanerMockRecorder
+}
+
+// MockcleanerMockRecorder is the mock recorder for Mockcleaner.
+type MockcleanerMockRecorder struct {
+	mock *Mockcleaner
+}
+
+// NewMockcleaner creates a new mock instance.
+func NewMockcleaner(ctrl *gomock.Controller) *Mockcleaner {
+	mock := &Mockcleaner{ctrl: ctrl}
+	mock.recorder = &MockcleanerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *Mockcleaner) EXPECT() *MockcleanerMockRecorder {
+	return m.recorder
+}
+
+// Queue mocks base method.
+func (m *Mockcleaner) Queue(urls models.UserCollection) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Queue", urls)
+}
+
+// Queue indicates an expected call of Queue.
+func (mr *MockcleanerMockRecorder) Queue(urls interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Queue", reflect.TypeOf((*Mockcleaner)(nil).Queue), urls)
+}

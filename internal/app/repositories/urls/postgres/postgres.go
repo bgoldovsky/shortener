@@ -108,7 +108,10 @@ func buildGetIDQuery(url string) (sql string, args []interface{}, err error) {
 	q := statement.
 		Select("id").
 		From("urls").
-		Where(sq.Eq{"url": url})
+		Where(
+			sq.Eq{"url": url},
+			sq.Eq{"deleted_at": nil},
+		)
 
 	return q.ToSql()
 }
@@ -153,22 +156,29 @@ func (r *postgresRepository) Get(ctx context.Context, urlID string) (string, err
 		return "", fmt.Errorf("build get url query error: %w", err)
 	}
 
-	var url sql.NullString
-	_ = r.db.QueryRowContext(ctx, query, args...).Scan(&url)
-	if url.Valid {
-		return url.String, nil
+	var (
+		url       sql.NullString
+		deletedAt sql.NullTime
+	)
+
+	_ = r.db.QueryRowContext(ctx, query, args...).Scan(&url, &deletedAt)
+	if deletedAt.Valid {
+		return "", internalErrors.ErrURLDeleted
+	}
+	if !url.Valid {
+		return "", internalErrors.ErrURLNotFound
 	}
 
-	return "", internalErrors.ErrURLNotFound
+	return url.String, nil
+
 }
 
 func buildGetQuery(urlID string) (sql string, args []interface{}, err error) {
 	q := statement.
-		Select("url").
+		Select("url", "deleted_at").
 		From("urls").
 		Where(sq.And{
 			sq.Eq{"id": urlID},
-			sq.Eq{"deleted_at": nil},
 		})
 
 	return q.ToSql()
@@ -216,6 +226,39 @@ func buildGetListQuery(userID string) (sql string, args []interface{}, err error
 	return q.ToSql()
 }
 
+// Delete Удаляет список URL указанного пользователя
+func (r *postgresRepository) Delete(ctx context.Context, urlsBatch []models.UserCollection) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
+
+	stmt, err := tx.PrepareContext(ctx, `update urls set deleted_at=$1 where id=$2 and user_id=$3 and deleted_at is null;`)
+	if err != nil {
+		return err
+	}
+
+	defer func(stmt *sql.Stmt) {
+		_ = stmt.Close()
+	}(stmt)
+
+	now := time.Now()
+
+	for _, collection := range urlsBatch {
+		for _, urlID := range collection.URLIDs {
+			if _, err = stmt.ExecContext(ctx, now, urlID, collection.UserID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
 // Ping Проверяет доступность базы данных
 func (r *postgresRepository) Ping(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -224,6 +267,7 @@ func (r *postgresRepository) Ping(ctx context.Context) error {
 	return r.db.PingContext(ctx)
 }
 
+// Close Закрывает соединение
 func (r *postgresRepository) Close() error {
 	return r.db.Close()
 }
